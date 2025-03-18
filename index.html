@@ -182,9 +182,7 @@ VARIABLES A EDITAR:
                     scormAPI.LMSSetValue("cmi.core.lesson_status", "completed");
                     scormAPI.LMSCommit("");
                 }
-                goodResultAudio.play();
-                completeInfo.style.display = "block";
-                continueBtn.style.display = "block";
+                finish();
             }
 
             lastValidTime = video.currentTime;
@@ -210,9 +208,7 @@ VARIABLES A EDITAR:
                 scormAPI.LMSCommit("");
                 scormAPI.LMSFinish("");
             }
-            goodResultAudio.play();
-            completeInfo.style.display = "block";
-            continueBtn.style.display = "block";
+            finish();
         });
 
         playPauseBtn.addEventListener("click", function() {
@@ -228,6 +224,12 @@ VARIABLES A EDITAR:
                 console.log(scormAPI.LMSGetValue("adl.nav.request"));
             }
         });
+
+        function finish() {
+            goodResultAudio.play();
+            completeInfo.style.display = "block";
+            continueBtn.style.display = "block";
+        }
     </script>
 </body>
 </html>
