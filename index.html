@@ -165,17 +165,16 @@ VARIABLES A EDITAR:
 
         video.addEventListener("timeupdate", function() {
             var progress = Math.floor((video.currentTime / video.duration) * 100);
+            var updateStatus = !(progress % 20);
             statusText.textContent = progress + textProgressSymbol;
             progressBar.style.width = progress + textProgressSymbol;
             progressBar.setAttribute("aria-valuenow", progress);
             
-            /*
-            if (scormAPI) {
+            if (scormAPI && updateStatus) {
                 scormAPI.LMSSetValue("cmi.core.lesson_status", "incomplete");
                 scormAPI.LMSSetValue("cmi.core.lesson_location", progress);
                 scormAPI.LMSCommit("");
             }
-            */
 
             if (progress >= completionTime) {
                 if (scormAPI) {
