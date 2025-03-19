@@ -219,9 +219,12 @@ VARIABLES A EDITAR:
         });
 
         continueBtn.addEventListener("click", function() {
+            window.history.back();
+            /*
             if (scormAPI) {
                 console.log(scormAPI.LMSGetValue("adl.nav.request"));
             }
+            */
         });
 
         function finish() {
