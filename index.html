@@ -59,12 +59,6 @@ VARIABLES A EDITAR:
             color: #FE9A2E;
             text-decoration: none;
         }
-        video::-webkit-media-controls-timeline {
-            display: none;
-        }
-        video::-webkit-media-controls {
-            overflow: hidden;
-        }
     </style>
 </head>
 <body>
@@ -73,29 +67,12 @@ VARIABLES A EDITAR:
         <div class="row">
             <div class="col-xs-12 col-md-5 col-lg-3 border border-start-0">
                 <h4 id="videoTitle" class="mt-2">UNIDAD 1: Video de Aprendizaje</h4>
-                <div class="row justify-content-center my-4">
-                    <div class="col">
-                        <button type="button" class="btn btn-dark" title="Retroceder 10 segundos" id="rewindBtn">
-                            <i class="bi bi-skip-backward-btn-fill"></i>
-                        </button>
-                        &nbsp;&nbsp;
-                        <button type="button" class="btn btn-dark" title="Play / Pausa" id="playPauseBtn">
-                            <i class="bi bi-play-fill"></i>
-                        </button>
-                    </div>
-                    
-                </div>
                 <h5>Información:</h5>
                 <ol>
                     <li>
                         Haz clic en el botón 
                         <button type="button" class="btn btn-dark btn-sm" title="Play / Pausa"><i class="bi bi-play-fill"></i></button> 
                         para comenzar con la lección.
-                    </li>
-                    <li>
-                        Usa el botón 
-                        <button type="button" class="btn btn-dark btn-sm" title="Retroceder 10 segundos"><i class="bi bi-skip-backward-btn-fill"></i></button> 
-                        para retroceder 10 segundos.
                     </li>
                     <li>Puedes pausar la reproducción en cualquier momento.</li>
                     <li>
@@ -121,10 +98,8 @@ VARIABLES A EDITAR:
                     <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                 </div>
                 <div class="ratio ratio-16x9">
-                    <video id="videoPlayer" width="100%" controls poster="RUTA_DEL_POSTER">
-                        <source src="RUTA_DEL_VIDEO" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
+                    <!-- IFRAME DE VIMEO AQUÍ -->
+                    <!--    API VIMEO AQUÍ    -->
                 </div>
             </div>
         </div>
@@ -138,105 +113,88 @@ VARIABLES A EDITAR:
     <script>
         // variables del curso
         var lessonTitle = "UNIDAD 1: Video de Aprendizaje";
+        var thumbUrl = "RUTA_DEL_COVER";
 
         var video = document.getElementById("videoPlayer");
         var statusText = document.getElementById("status");
-        var playPauseBtn = document.getElementById("playPauseBtn");
-        var rewindBtn = document.getElementById("rewindBtn");
         var continueBtn = document.getElementById("continueBtn");
         var completeInfo = document.getElementById("completeInfo");
         var progressBar = document.getElementById("progressBar");
         var videoTitle = document.getElementById("videoTitle");
         var goodResultAudio = document.getElementById("goodResultAudio");
+        var iframe = document.querySelector("iframe");
         var scorm = new ScormApiWrapper();
-        var lastValidTime = 0;
-        var skipAttempts = 2;
         var textProgressSymbol = "%";
         var completionTime = 100;
+        var durationVideo = 0;
+        var loopInterval = null;
+
+        // Vimeo API
+        var player = new Vimeo.Player(iframe);
+        player.getDuration().then(function(duration) {
+            durationVideo = duration;
+        });
 
         document.title = lessonTitle;
         videoTitle.textContent = lessonTitle;
         if (scormAPI) {
             scormAPI.LMSInitialize("");
-            // Obtener el título del paquete SCORM y actualizar el título del video
-            //var scormPackageTitle = scormAPI.LMSGetValue("cmi.core.lesson_location") || "UNIDAD 1: Video de Aprendizaje";
-            //document.title = scormPackageTitle;
-            //videoTitle.textContent = scormPackageTitle;
         }
 
-        video.addEventListener("timeupdate", function() {
-            var progress = Math.floor((video.currentTime / video.duration) * 100);
-            var updateStatus = !(progress % 20);
-            statusText.textContent = progress + textProgressSymbol;
-            progressBar.style.width = progress + textProgressSymbol;
-            progressBar.setAttribute("aria-valuenow", progress);
-            
-            if (scormAPI && updateStatus) {
-                scormAPI.LMSSetValue("cmi.core.lesson_status", "incomplete");
-                scormAPI.LMSSetValue("cmi.core.lesson_location", progress);
-                scormAPI.LMSCommit("");
-            }
-
-            if (progress >= completionTime) {
-                if (scormAPI) {
-                    scormAPI.LMSSetValue("cmi.core.lesson_status", "completed");
-                    scormAPI.LMSCommit("");
-                }
-                finish();
-            }
-
-            lastValidTime = video.currentTime;
+        continueBtn.addEventListener("click", function() {
+            window.history.back();
         });
 
-        video.addEventListener("seeking", function() {
-            if (video.currentTime > lastValidTime) {
-                video.currentTime = lastValidTime;
-                return;
-            }
-
-            /*
-            if (skipAttempts > 1) {
-                video.currentTime = 0;
-                skipAttempts = 0;
-            }
-            */
-        });
-
-        video.addEventListener("ended", function() {
+        function finish() {
+            clearInterval(loopInterval);
+            progressUpdate(100);
+            player = null;
+            iframe.src = "";
+            iframe.style.backgroundColor = "#D3D3D3";
             if (scormAPI) {
                 scormAPI.LMSSetValue("cmi.core.lesson_status", "completed");
                 scormAPI.LMSCommit("");
                 scormAPI.LMSFinish("");
             }
-            finish();
-        });
-
-        rewindBtn.addEventListener('click', function() {
-            video.currentTime = Math.max(0, video.currentTime - 10);
-        });
-
-        playPauseBtn.addEventListener("click", function() {
-            if (video.paused) {
-                video.play();
-            } else {
-                video.pause();
-            }
-        });
-
-        continueBtn.addEventListener("click", function() {
-            window.history.back();
-            /*
-            if (scormAPI) {
-                console.log(scormAPI.LMSGetValue("adl.nav.request"));
-            }
-            */
-        });
-
-        function finish() {
             goodResultAudio.play();
             completeInfo.style.display = "block";
             continueBtn.style.display = "block";
         }
+
+        player.on('ended', function(data) {
+            finish();
+        });
+
+        function timeUpdate() {
+            player.getCurrentTime().then(function(seconds) {
+                var currentTime = 0;
+                currentTime = seconds;
+                var progress = Math.floor((currentTime / durationVideo) * 100);
+
+                progressUpdate(progress);
+
+                if (scormAPI && progress > 25) {
+                    scormAPI.LMSSetValue("cmi.core.lesson_status", "incomplete");
+                    scormAPI.LMSSetValue("cmi.core.lesson_location", progress);
+                    scormAPI.LMSCommit("");
+                }
+
+                if (progress >= completionTime) {
+                    finish();
+                }
+            });
+        };
+
+        function progressUpdate(progress) {
+            statusText.textContent = progress + textProgressSymbol;
+            progressBar.style.width = progress + textProgressSymbol;
+            progressBar.setAttribute("aria-valuenow", progress);
+        }
+
+        loopInterval = setInterval(() => {
+            timeUpdate();
+        }, 15000);
+
     </script>
 </body>
 </html>
